@@ -2,14 +2,34 @@
 # Simple backup script to backup files to s3
 # Requires aws package to be installed
 
+# Uncomment if you want to debug
+#set -x
+
 set -eu
 
 date_now=$(date -u -R)
-backup_path="/srv/blackbox/Volume_1/backups/"
-s3_remote_bucket="limed-sudoers-backupbucket"
+backup_path="${BACKUP_PATH:-/srv/blackbox/Volume_1/backups/}"
+s3_remote_bucket="${BACKUP_BUCKET:-limed-sudoers-backupbucket}"
+
+# Default to us-west-2
+aws_default_region=${AWS_DEFAULT_REGION:-us-west-2}
+export "$aws_default_region"
+
+if [ ! -z  "${AWS_ACCESS_KEY_ID}" ] || [ ! -z  "${AWS_SECRET_ACCESS_KEY}" ]; then
+    echo "AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY environment variable not set"
+    exit 1
+fi
 
 # first things first delete all the cruft
 echo "Starting backup at ${date_now}"
-find ${backup_path} -name '*.DS_Store' -type f -delete
-aws s3 sync ${backup_path} s3://${s3_remote_bucket} --delete --quiet
-echo "Ending backup at ${date_now}"
+find "${backup_path}" -name '*.DS_Store' -type f -delete
+aws s3 sync "${backup_path}" s3://"${s3_remote_bucket}" --delete
+rv=$?
+
+if [ ${rv} -ne 0 ]; then
+    echo "Error something happened, aws failed with error code: ${rv}"
+    exit 1
+else
+    echo "Ending backup at ${date_now}"
+    exit "${rv}"
+fi
