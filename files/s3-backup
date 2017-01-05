@@ -12,10 +12,9 @@ backup_path="${BACKUP_PATH:-/srv/blackbox/Volume_1/backups/}"
 s3_remote_bucket="${BACKUP_BUCKET:-limed-sudoers-backupbucket}"
 
 # Default to us-west-2
-aws_default_region=${AWS_DEFAULT_REGION:-us-west-2}
-export "$aws_default_region"
+AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION:-us-west-2}
 
-if [ ! -z  "${AWS_ACCESS_KEY_ID}" ] || [ ! -z  "${AWS_SECRET_ACCESS_KEY}" ]; then
+if [ -z  "${AWS_ACCESS_KEY_ID}" ] || [ -z  "${AWS_SECRET_ACCESS_KEY}" ]; then
     echo "AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY environment variable not set"
     exit 1
 fi
